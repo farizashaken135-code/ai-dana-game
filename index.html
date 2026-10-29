@@ -4,304 +4,428 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI DANA: МЕКТЕПКЕ ДАЯРЛЫҚ</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
-        * {
-            font-family: 'Inter', sans-serif;
-            user-select: none;
-            -webkit-user-select: none;
-            box-sizing: border-box;
+        :root {
+            --primary: #4f46e5;
+            --secondary: #9333ea;
+            --accent: #eab308;
+            --bg: #f8fafc;
+            --text: #1e293b;
+            --card-bg: #ffffff;
         }
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            overflow-x: hidden;
-            margin: 0;
-            padding: 0;
-        }
-        .screen-container {
-            display: none;
-            width: 100%;
-            height: 100vh;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 1.5rem;
-        }
-        .screen-container.active {
-            display: flex;
-        }
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 1rem;
-        }
-        .btn-action {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .btn-action:active {
-            transform: scale(0.95);
-        }
-        .hp-progress {
-            transition: width 0.4s ease-in-out;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow-x: hidden; }
+        
+        .screen { display: none; width: 100%; max-width: 900px; height: 550px; background: var(--card-bg); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 30px; flex-direction: column; position: relative; overflow: hidden; }
+        .screen.active { display: flex; }
+
+        h1 { color: var(--primary); font-size: 2rem; margin-bottom: 15px; text-align: center; }
+        p { margin-bottom: 15px; text-align: center; color: #475569; font-size: 1.05rem; }
+
+        .btn { background: var(--primary); color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; margin: 5px; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2); }
+        .btn:hover { background: #4338ca; transform: translateY(-2px); }
+        .btn-secondary { background: var(--secondary); }
+        .btn-secondary:hover { background: #7e22ce; }
+        .btn-accent { background: var(--accent); color: #1e293b; }
+        .btn-accent:hover { background: #ca8a04; }
+
+        .menu-buttons { display: flex; flex-direction: column; gap: 10px; width: 300px; margin: 0 auto; }
+        
+        .input-field { padding: 12px; font-size: 1rem; border: 2px solid #cbd5e1; border-radius: 8px; width: 300px; margin: 10px auto; text-align: center; outline: none; transition: 0.2s; }
+        .input-field:focus { border-color: var(--primary); }
+
+        .char-select { display: flex; justify-content: center; gap: 15px; margin: 15px 0; }
+        .char-card { border: 2px solid #cbd5e1; border-radius: 10px; padding: 10px; cursor: pointer; text-align: center; width: 110px; transition: 0.2s; background: #fff; }
+        .char-card.selected { border-color: var(--primary); background: #e0e7ff; transform: scale(1.05); }
+
+        #gameCanvas { background: linear-gradient(to bottom, #e0f2fe, #f0fdf4); border-radius: 12px; display: block; margin: 0 auto; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        
+        .hud { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; font-weight: bold; font-size: 0.95rem; background: #f1f5f9; padding: 8px 15px; border-radius: 8px; }
+
+        /* Quiz modal */
+        #quizModal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 10; }
+        .quiz-box { background: white; padding: 30px; border-radius: 12px; width: 80%; max-width: 600px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .quiz-btn { background: #f8fafc; border: 2px solid #cbd5e1; padding: 12px; border-radius: 8px; cursor: pointer; text-align: left; font-weight: 600; transition: 0.2s; }
+        .quiz-btn:hover { background: #e2e8f0; border-color: var(--primary); }
+
+        /* QR Modal */
+        #qrModal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 20; }
+        .qr-box { background: white; padding: 25px; border-radius: 12px; text-align: center; width: 350px; }
+        
+        .flex-row { display: flex; justify-content: center; gap: 10px; margin-top: 15px; }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center">
+<body>
 
-    <div class="w-full max-w-4xl h-[90vh] relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl flex flex-col">
-
-        <!-- 1. МӘЗІР (MAIN MENU) -->
-        <div id="mainMenu" class="screen-container active justify-center items-center text-center p-8">
-            <div class="max-w-md w-full space-y-6">
-                <div class="inline-block p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 mb-2">
-                    <span class="text-3xl">🎓</span>
-                </div>
-                <h1 class="text-3xl font-extrabold tracking-tight text-white">
-                    AI DANA: <span class="text-indigo-400">МЕКТЕПКЕ ДАЯРЛЫҚ</span>
-                </h1>
-                <p class="text-slate-400 text-sm">
-                    Болашақ педагогтерге арналған интерактивті білім беру ойыны
-                </p>
-
-                <div class="space-y-4 pt-4">
-                    <input type="text" id="studentName" placeholder="Аты-жөніңізді енгізіңіз..." 
-                        class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-center focus:outline-none focus:border-indigo-500 text-slate-200">
-                    
-                    <button onclick="startGame()" class="btn-action w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 font-bold rounded-xl shadow-lg shadow-indigo-600/30 text-white">
-                        Ойынды бастау
-                    </button>
-                    
-                    <button onclick="showScreen('rulesScreen')" class="btn-action w-full py-3 bg-slate-800 hover:bg-slate-700 font-semibold rounded-xl border border-slate-700 text-slate-300">
-                        Ойын ережесі
-                    </button>
-                </div>
+    <!-- БАСТЫ ЭКРАН -->
+    <div id="mainMenu" class="screen active">
+        <h1>AI DANA: МЕКТЕПКЕ ДАЯРЛЫҚ</h1>
+        <p>Болашақ педагогтерге арналған интерактивті білім беру ойыны</p>
+        
+        <input type="text" id="studentName" class="input-field" placeholder="Аты-жөніңізді енгізіңіз..." value="Студент">
+        
+        <div class="char-select">
+            <div class="char-card selected" onclick="selectChar(0, this)">
+                <div style="font-size: 2rem;">👩‍🏫</div>
+                <div style="font-size: 0.85rem; margin-top:5px;">Болашақ тәрбиеші</div>
+            </div>
+            <div class="char-card" onclick="selectChar(1, this)">
+                <div style="font-size: 2rem;">🔬</div>
+                <div style="font-size: 0.85rem; margin-top:5px;">Педагог-зерттеуші</div>
+            </div>
+            <div class="char-card" onclick="selectChar(2, this)">
+                <div style="font-size: 2rem;">💻</div>
+                <div style="font-size: 0.85rem; margin-top:5px;">Цифрлық педагог</div>
             </div>
         </div>
 
-        <!-- 2. ЕРЕЖЕЛЕР (RULES) -->
-        <div id="rulesScreen" class="screen-container p-8 justify-between">
-            <div class="max-w-2xl mx-auto w-full space-y-6 my-auto">
-                <h2 class="text-2xl font-bold text-indigo-400 border-b border-slate-800 pb-3">Ойын ережесі</h2>
-                <div class="space-y-4 text-slate-300 text-sm leading-relaxed">
-                    <p>1. Сіз ЖИ ұсынған педагогикалық тұжырымдар мен диагностикалық қорытындыларды сараптайсыз.</p>
-                    <p>2. Әрбір дұрыс таңдалған шешім Boss-тың HP көрсеткішін азайтады.</p>
-                    <p>3. Қате жауап таңдалған жағдайда өмір саны (❤️) азаяды.</p>
-                </div>
-                <button onclick="showScreen('mainMenu')" class="btn-action w-full py-3 bg-slate-800 hover:bg-slate-700 font-bold rounded-xl border border-slate-700 text-white mt-6">
-                    Артқа қайту
-                </button>
-            </div>
+        <div class="menu-buttons">
+            <button class="btn" onclick="startGame()">Ойынды бастау</button>
+            <button class="btn btn-secondary" onclick="showScreen('rulesScreen')">Ойын ережесі</button>
+            <button class="btn btn-accent" onclick="openQrModal()">QR-код арқылы бөлісу</button>
         </div>
+    </div>
 
-        <!-- 3. ОЙЫН ЕКРАНЫ (GAMEPLAY) -->
-        <div id="gameScreen" class="screen-container">
-            <!-- HUD -->
-            <div class="flex items-center justify-between glass-panel p-4 mb-4">
-                <div class="flex items-center gap-3">
-                    <span id="hudLives" class="text-red-500 text-sm font-bold">❤️❤️❤️</span>
-                    <span id="hudXp" class="text-indigo-400 text-xs font-semibold px-2.5 py-1 bg-indigo-500/10 rounded-full border border-indigo-500/20">⚡ 0 XP</span>
-                </div>
-                <span id="hudLevel" class="text-slate-400 text-xs font-medium">1-деңгей: Мектепке даярлық негіздері</span>
-            </div>
-
-            <!-- BOSS & SCENARIO -->
-            <div class="flex-1 glass-panel p-6 flex flex-col justify-between space-y-4">
-                <!-- Boss Header -->
-                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-xl">
-                            🦉
-                        </div>
-                        <div>
-                            <h3 id="bossTitle" class="font-bold text-red-400 text-sm">Boss 1: «Біржақты көзқарас»</h3>
-                            <p class="text-xs text-slate-500">Қате тұжырымдарды бейтараптандырыңыз!</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span class="text-xs text-slate-400 font-mono">Boss HP</span>
-                        <div class="w-32 h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-                            <div id="hpBar" class="hp-progress h-full bg-red-500" style="width: 100%;"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Scenario -->
-                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80">
-                    <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase block mb-1">Жағдаят:</span>
-                    <p id="scenarioText" class="text-sm text-slate-200 leading-relaxed"></p>
-                </div>
-
-                <!-- Options -->
-                <div>
-                    <p class="text-xs text-amber-400 font-semibold mb-2">Осы жағдаят бойынша дұрыс шешімді таңдаңыз:</p>
-                    <div id="optionsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
-                </div>
-            </div>
-
-            <!-- Footer / Feedback -->
-            <div class="mt-4 flex items-center justify-between">
-                <button onclick="showScreen('mainMenu')" class="text-xs text-slate-500 hover:text-slate-400 font-medium">
-                    Ойынды тоқтату
-                </button>
-                <p id="feedbackText" class="text-xs font-semibold text-right h-4"></p>
-            </div>
+    <!-- ЕРЕЖЕ ЕКРАНЫ -->
+    <div id="rulesScreen" class="screen">
+        <h1>Ойын ережесі</h1>
+        <div style="text-align: left; max-height: 320px; overflow-y: auto; padding-right: 10px; font-size: 0.95rem; line-height: 1.5;">
+            <p><strong>1. Басқару:</strong> Пернетагадағы Жоғары/Space — секіру, Төмен — еңкею, Солға/Оңға — жолақ ауыстыру. 1, 2, 3, 4 пернелері немесе экрандағы түймелер арқылы сұраққа жауап беріңіз.</p>
+            <p><strong>2. Кедергілер:</strong> Қате педагогикалық шешімдерден қашыңыз, жүректеріңізді сақтаңыз.</p>
+            <p><strong>3. Сұрақ қақпалары:</strong> Жол бойындағы сұрақтарға жауап беріп, XP ұпайларын жинаңыз.</p>
+            <p><strong>4. Деңгейлер:</strong> 3 негізгі деңгей мен финалдық Boss Battle кезеңінен өтіп, «AI Education Master» дәрежесіне жетіңіз!</p>
         </div>
-
-        <!-- 4. НӘТИЖЕ (RESULT) -->
-        <div id="resultScreen" class="screen-container justify-center items-center text-center p-8">
-            <div class="max-w-md w-full space-y-6">
-                <div class="text-5xl mb-2">🎉</div>
-                <h2 class="text-2xl font-bold text-white">Ойын аяқталды!</h2>
-                <div id="resultDetails" class="glass-panel p-6 text-sm text-slate-300 space-y-2 text-left"></div>
-                <div class="space-y-3">
-                    <button onclick="startGame()" class="btn-action w-full py-3 bg-indigo-600 hover:bg-indigo-500 font-bold rounded-xl text-white">
-                        Қайта ойнау
-                    </button>
-                    <button onclick="showScreen('mainMenu')" class="btn-action w-full py-3 bg-slate-800 hover:bg-slate-700 font-semibold rounded-xl text-slate-300 border border-slate-700">
-                        Басты мәзірге қайту
-                    </button>
-                </div>
-            </div>
+        <div style="margin-top: 20px; text-align: center;">
+            <button class="btn" onclick="showScreen('mainMenu')">Артқа қайту</button>
         </div>
+    </div>
 
+    <!-- ОЙЫН ЕКРАНЫ -->
+    <div id="gameScreen" class="screen">
+        <div class="hud">
+            <span id="hudLevel">Деңгей: 1</span>
+            <span id="hudScore">Ұпай: 0</span>
+            <span id="hudXp">XP: 0</span>
+            <span id="hudLives">❤️ 3</span>
+        </div>
+        <canvas id="gameCanvas" width="840" height="420"></canvas>
+        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+            <button class="btn" style="padding: 6px 15px; font-size: 0.85rem;" onclick="pauseGame()">Пауза</button>
+            <span id="hudSpeed" style="font-size: 0.9rem; font-weight: bold; align-self: center;">Жылдамдық: 1x</span>
+            <button class="btn btn-secondary" style="padding: 6px 15px; font-size: 0.85rem;" onclick="showScreen('mainMenu')">Шығу</button>
+        </div>
+    </div>
+
+    <!-- НӘТИЖЕ ЕКРАНЫ -->
+    <div id="resultScreen" class="screen">
+        <h1>Ойын нәтижелері</h1>
+        <div id="resultDetails" style="text-align: center; font-size: 1.1rem; line-height: 1.8; margin: 20px 0;"></div>
+        <div class="flex-row">
+            <button class="btn" onclick="startGame()">Қайта ойнау</button>
+            <button class="btn btn-secondary" onclick="downloadResults()">Нәтижені жүктеу</button>
+            <button class="btn btn-accent" onclick="showScreen('mainMenu')">Басты мәзір</button>
+        </div>
+    </div>
+
+    <!-- QUIZ MODAL -->
+    <div id="quizModal">
+        <div class="quiz-box">
+            <h3 id="quizQuestion" style="color: var(--primary); margin-bottom: 15px;">Сұрақ</h3>
+            <div class="quiz-options" id="quizOptions"></div>
+            <div id="quizFeedback" style="margin-top: 15px; font-weight: bold;"></div>
+        </div>
+    </div>
+
+    <!-- QR MODAL -->
+    <div id="qrModal">
+        <div class="qr-box">
+            <h3>Ойынға арналған QR-код</h3>
+            <p style="font-size: 0.85rem; margin: 10px 0;">Студенттер осы кодты сканерлеп, ойынға кіре алады:</p>
+            <div id="qrcode" style="display: flex; justify-content: center; margin: 15px 0;">
+                <svg id="qrSvg" width="160" height="160" viewBox="0 0 21 21" style="border: 2px solid #cbd5e1; border-radius: 8px; background: #fff;"></svg>
+            </div>
+            <button class="btn" onclick="closeQrModal()">Жабу</button>
+        </div>
     </div>
 
     <script>
+        let selectedCharacter = 0;
         let gameState = {
             name: "Студент",
+            score: 0,
             xp: 0,
             lives: 3,
-            bossHp: 100,
-            currentScenarioIndex: 0
+            level: 1,
+            speed: 4,
+            active: false,
+            correctCount: 0,
+            wrongCount: 0
         };
 
-        const scenarios = [
-            {
-                boss: "Boss 1: «Біржақты көзқарас»",
-                text: "ЖИ қорытындысы: «6 жасар Әлібек әріптердің бәрін біледі және санайды. Ол 100% дайын. Басқа диагностика жүргізудің қажеті жоқ».",
-                options: [
-                    { text: "Қорытынды бұрыс. Академиялық білімнен өзге эмоционалдық, әлеуметтік және моторикалық даярлық тексерілмеген.", correct: true },
-                    { text: "Қорытынды толықтай дұрыс. Әріп пен сан білсе мектепке толық дайын.", correct: false }
-                ],
-                exp: "Дұрыс! Мектепке даярлық кешенді түрде бағалануы тиіс."
-            },
-            {
-                boss: "Boss 2: «Асығыс шешім»",
-                text: "ЖИ ұсынысы: «Бала сабақта сөйлемеді, демек оның қарым-қатынас дағдысы мүлде дамымаған, арнайы мектепке ауыстыру керек».",
-                options: [
-                    { text: "Бұл асығыс тұжырым. Баланың бейімделу кезеңі мен жеке психологиялық жағдайы ескерілуі тиіс.", correct: true },
-                    { text: "ЖИ әрқашан дұрыс айтады, ұсынысты бірден орындау қажет.", correct: false }
-                ],
-                exp: "Керемет! Бір көрініске қарап түпкілікті диагноз қоюға болмайды."
-            },
-            {
-                boss: "Boss 3: «Стандарттау қатесі»",
-                text: "ЖИ есебі: «Барлық бала бірдей 7 минутта логикалық тестті тапсыруы тиіс. Кім кешікті — артта қалған».",
-                options: [
-                    { text: "Қате тәсіл. Әр баланың психофизиологиялық даму қарқыны әртүрлі екені ескерілмеген.", correct: true },
-                    { text: "Бұл стандарт мектеп үшін өте ыңғайлы әрі дұрыс.", correct: false }
-                ],
-                exp: "Тамаша! Жеке даму траекториясы әрқашан басты орында."
-            }
+        const questions = [
+            { q: "Мектепке даярлықтың негізгі ерекшелігі қандай?", options: ["Тек әріптерді білу", "Тек 100-ге дейін санау", "Физиологиялық, психологиялық, әлеуметтік және танымдық кешенді даярлық", "Мектеп формасын алу"], correct: 2, exp: "Мектепке даярлық тек академиялық дағдылармен шектелмейді." },
+            { q: "ЖИ баланың мектепке даярлығын өздігінен толық анықтай ала ма?", options: ["Иә, әрқашан", "Жоқ, ЖИ тек көмекші құрал ретінде қолданылуы керек", "Иә, бір тапсырма жеткілікті", "Иә, педагог қажет емес"], correct: 1, exp: "ЖИ тек көмекші құрал, шешімді педагог қабылдайды." },
+            { q: "Баланың әлеуметтік даярлығын бақылауға қай тапсырма сәйкес?", options: ["Топтық ойында ережені сақтауын бақылау", "20 мысал шығарту", "Бір сағат әріп жаздыру", "Мәтінді жатқа айту"], correct: 0, exp: "Әлеуметтік даярлық топтағы қарым-қатынас пен ереже сақтау арқылы көрінеді." },
+            { q: "ЖИ ұсынған жаттығуды қолданар алдында педагог не істеуі керек?", options: ["Тексермей қолдану", "Тек атауына қарау", "Жас ерекшелігіне, мақсатына, қауіпсіздігіне талдау жасау", "Баланың орнына орындау"], correct: 2, exp: "Педагогикалық сараптама міндетті түрде жасалуы тиіс." },
+            { q: "«Бала тұйық, сондықтан мектепке дайын емес» деген қорытындының қатесі?", options: ["Қорытынды бір ғана белгіге сүйеніп жасалған", "Өте ұзақ жазылған", "ЖИ қолданылмаған", "Сурет жоқ"], correct: 0, exp: "Диагностика кешенді түрде жүргізілуі керек." }
         ];
 
-        function showScreen(id) {
-            document.querySelectorAll('.screen-container').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+        function selectChar(index, element) {
+            document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedCharacter = index;
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
         }
 
         function startGame() {
-            const input = document.getElementById('studentName').value.trim();
-            gameState.name = input !== "" ? input : "Студент";
+            const nameInput = document.getElementById('studentName').value.trim();
+            gameState.name = nameInput !== "" ? nameInput : "Студент";
+            gameState.score = 0;
             gameState.xp = 0;
             gameState.lives = 3;
-            gameState.bossHp = 100;
-            gameState.currentScenarioIndex = 0;
+            gameState.level = 1;
+            gameState.speed = 4;
+            gameState.correctCount = 0;
+            gameState.wrongCount = 0;
+            gameState.active = true;
 
             showScreen('gameScreen');
-            loadScenario();
+            initCanvasGame();
         }
 
-        function loadScenario() {
-            if (gameState.currentScenarioIndex >= scenarios.length) {
-                endGame(true);
-                return;
+        // Canvas Game Logic
+        let canvas, ctx;
+        let player = { x: 100, y: 300, width: 35, height: 45, vy: 0, isJumping: false, lane: 1 };
+        let obstacles = [];
+        let frameCount = 0;
+
+        function initCanvasGame() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            player.y = 300;
+            obstacles = [];
+            
+            // Keyboard listener
+            window.addEventListener('keydown', handleKeyControls);
+            requestAnimationFrame(updateGame);
+        }
+
+        function handleKeyControls(e) {
+            if (!gameState.active) return;
+            if (e.code === 'ArrowUp' || e.code === 'Space') {
+                if (!player.isJumping) {
+                    player.vy = -10;
+                    player.isJumping = true;
+                }
+            } else if (e.code === 'ArrowLeft') {
+                if (player.lane > 0) player.lane--;
+            } else if (e.code === 'ArrowRight') {
+                if (player.lane < 2) player.lane++;
+            }
+        }
+
+        function updateGame() {
+            if (!gameState.active) return;
+
+            // Physics
+            player.vy += 0.5;
+            player.y += player.vy;
+            if (player.y > 300) {
+                player.y = 300;
+                player.vy = 0;
+                player.isJumping = false;
             }
 
-            let sc = scenarios[gameState.currentScenarioIndex];
-            document.getElementById('bossTitle').innerText = sc.boss;
-            document.getElementById('scenarioText').innerText = sc.text;
-            document.getElementById('hpBar').style.width = gameState.bossHp + '%';
-            document.getElementById('feedbackText').innerText = '';
+            let targetX = 100 + player.lane * 60;
+            player.x += (targetX - player.x) * 0.2;
 
-            let grid = document.getElementById('optionsGrid');
-            grid.innerHTML = '';
+            // Spawning obstacles/items
+            frameCount++;
+            if (frameCount % 120 === 0) {
+                let type = Math.random() > 0.4 ? 'quiz' : 'obstacle';
+                obstacles.push({
+                    x: canvas.width,
+                    y: 310,
+                    width: 35,
+                    height: 35,
+                    type: type,
+                    lane: Math.floor(Math.random() * 3)
+                });
+            }
 
-            sc.options.forEach(opt => {
-                let btn = document.createElement('button');
-                btn.className = 'btn-action p-4 text-left bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs text-slate-300 font-medium leading-relaxed';
-                btn.innerText = opt.text;
-                btn.onclick = () => handleAnswer(opt.correct, sc.exp);
-                grid.appendChild(btn);
-            });
+            // Move obstacles
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let obs = obstacles[i];
+                obs.x -= gameState.speed;
 
+                let obsXCoord = 100 + obs.lane * 60;
+                // Collision detection
+                if (Math.abs(player.x - obsXCoord) < 25 && Math.abs(player.y - obs.y) < 30) {
+                    if (obs.type === 'quiz') {
+                        triggerQuiz();
+                    } else {
+                        gameState.lives--;
+                        gameState.wrongCount++;
+                        if (gameState.lives <= 0) {
+                            endGame();
+                        }
+                    }
+                    obstacles.splice(i, 1);
+                    continue;
+                }
+
+                if (obs.x < -50) {
+                    obstacles.splice(i, 1);
+                    gameState.score += 10;
+                    gameState.xp += 5;
+                }
+            }
+
+            drawGame();
             updateHUD();
+
+            if (gameState.active) {
+                requestAnimationFrame(updateGame);
+            }
         }
 
-        function handleAnswer(isCorrect, explanation) {
-            let feedback = document.getElementById('feedbackText');
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            if (isCorrect) {
-                feedback.className = 'text-xs font-semibold text-right h-4 text-sky-400';
-                feedback.innerText = explanation;
-                gameState.xp += 50;
+            // Draw road lanes
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([10, 10]);
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, 260 + i * 40);
+                ctx.lineTo(canvas.width, 260 + i * 40);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
 
-                gameState.bossHp -= Math.round(100 / scenarios.length);
-                if (gameState.bossHp < 0) gameState.bossHp = 0;
-                document.getElementById('hpBar').style.width = gameState.bossHp + '%';
+            // Draw player
+            ctx.fillStyle = selectedCharacter === 0 ? '#4f46e5' : selectedCharacter === 1 ? '#9333ea' : '#eab308';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
 
-                setTimeout(() => {
-                    gameState.currentScenarioIndex++;
-                    loadScenario();
-                }, 1800);
-            } else {
-                feedback.className = 'text-xs font-semibold text-right h-4 text-red-400';
-                feedback.innerText = "Қате шешім! ЖИ қателігін байқамадыңыз.";
-                gameState.lives--;
-                updateHUD();
-
-                if (gameState.lives <= 0) {
-                    setTimeout(() => endGame(false), 1200);
-                }
+            // Draw obstacles
+            for (let obs of obstacles) {
+                let obsXCoord = 100 + obs.lane * 60;
+                ctx.fillStyle = obs.type === 'quiz' ? '#10b981' : '#ef4444';
+                ctx.fillRect(obsXCoord, obs.y, obs.width, obs.height);
             }
         }
 
         function updateHUD() {
-            let hearts = "❤️".repeat(gameState.lives);
-            document.getElementById('hudLives').innerText = hearts || "💀";
-            document.getElementById('hudXp').innerText = `⚡ ${gameState.xp} XP`;
+            document.getElementById('hudLevel').innerText = `Деңгей: ${gameState.level}`;
+            document.getElementById('hudScore').innerText = `Ұпай: ${gameState.score}`;
+            document.getElementById('hudXp').innerText = `XP: ${gameState.xp}`;
+            document.getElementById('hudLives').innerText = `❤️ ${gameState.lives}`;
+            document.getElementById('hudSpeed').innerText = `Жылдамдық: ${(gameState.speed / 4).toFixed(1)}x`;
         }
 
-        function endGame(success) {
-            let details = document.getElementById('resultDetails');
-            if (success) {
-                details.innerHTML = `
-                    <p><strong class="text-indigo-400">Студент:</strong> ${gameState.name}</p>
-                    <p><strong class="text-indigo-400">Нәтиже:</strong> Барлық Boss жеңілді! 🎉</p>
-                    <p><strong class="text-indigo-400">Ұпай:</strong> ${gameState.xp} XP</p>
-                    <p class="text-xs text-slate-400 pt-2 border-t border-slate-800 mt-2">Сіз ЖИ ұсынған контентке кәсіби педагогикалық сараптама жасап шықтыңыз!</p>
-                `;
+        function triggerQuiz() {
+            gameState.active = false;
+            const qObj = questions[Math.floor(Math.random() * questions.length)];
+            
+            document.getElementById('quizQuestion').innerText = qObj.q;
+            let optionsHTML = '';
+            qObj.options.forEach((opt, idx) => {
+                optionsHTML += `<button class="quiz-btn" onclick="answerQuiz(${idx}, ${qObj.correct}, '${qObj.exp}')">${String.fromCharCode(65 + idx)}. ${opt}</button>`;
+            });
+            document.getElementById('quizOptions').innerHTML = optionsHTML;
+            document.getElementById('quizFeedback').innerText = '';
+            document.getElementById('quizModal').style.display = 'flex';
+        }
+
+        function answerQuiz(selected, correct, exp) {
+            let feedback = document.getElementById('quizFeedback');
+            if (selected === correct) {
+                feedback.style.color = '#10b981';
+                feedback.innerText = `Дұрыс! ${exp}`;
+                gameState.score += 100;
+                gameState.xp += 100;
+                gameState.correctCount++;
             } else {
-                details.innerHTML = `
-                    <p><strong class="text-red-400">Студент:</strong> ${gameState.name}</p>
-                    <p><strong class="text-red-400">Нәтиже:</strong> Өміріңіз таусылды.</p>
-                    <p class="text-xs text-slate-400 pt-2 border-t border-slate-800 mt-2">Қайтадан байқап көріңіз!</p>
-                `;
+                feedback.style.color = '#ef4444';
+                feedback.innerText = `Қате! ${exp}`;
+                gameState.wrongCount++;
             }
+
+            setTimeout(() => {
+                document.getElementById('quizModal').style.display = 'none';
+                gameState.active = true;
+                requestAnimationFrame(updateGame);
+            }, 2000);
+        }
+
+        function pauseGame() {
+            gameState.active = false;
+            alert("Ойын уақытша тоқтатылды. Жалғастыру үшін ОК басыңыз.");
+            gameState.active = true;
+            requestAnimationFrame(updateGame);
+        }
+
+        function endGame() {
+            gameState.active = false;
+            window.removeEventListener('keydown', handleKeyControls);
+            
+            let accuracy = (gameState.correctCount + gameState.wrongCount) > 0 ? Math.round((gameState.correctCount / (gameState.correctCount + gameState.wrongCount)) * 100) : 0;
+            
+            let resultHTML = `
+                Студент: <b>${gameState.name}</b><br>
+                Жалпы ұпай: <b>${gameState.score}</b> | Жинақталған XP: <b>${gameState.xp}</b><br>
+                Дұрыс жауаптар: <b>${gameState.correctCount}</b> | Қателер: <b>${gameState.wrongCount}</b><br>
+                Дәлдік пайызы: <b>${accuracy}%</b><br><br>
+                <em>${accuracy >= 75 ? 'Өте жақсы! Сіз мектепке даярлық қағидаларын жоғары деңгейде меңгердіңіз.' : 'Тақырыпты қосымша қайталап шығуға кеңес беріледі.'}</em>
+            `;
+            
+            document.getElementById('resultDetails').innerHTML = resultHTML;
             showScreen('resultScreen');
+        }
+
+        function downloadResults() {
+            let text = `Ойын нәтижесі: AI DANA: МЕКТЕПКЕ ДАЯРЛЫҚ\nАты-жөні: ${gameState.name}\nҰпай: ${gameState.score}\nXP: ${gameState.xp}\nДұрыс жауаптар: ${gameState.correctCount}\nҚателер: ${gameState.wrongCount}`;
+            let blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            let link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${gameState.name}_natizhe.txt`;
+            link.click();
+        }
+
+        // QR Modal functions
+        function openQrModal() {
+            generateLocalQr(window.location.href);
+            document.getElementById('qrModal').style.display = 'flex';
+        }
+
+        function closeQrModal() {
+            document.getElementById('qrModal').style.display = 'none';
+        }
+
+        function generateLocalQr(url) {
+            let svg = document.getElementById('qrSvg');
+            let size = 21;
+            let cell = 160 / size;
+            let html = '';
+            
+            // Simple visual placeholder matrix for local standalone QR rendering
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    let isDark = (r === 0 || r === size - 1 || c === 0 || c === size - 1) || 
+                                 (r < 7 && c < 7) || (r < 7 && c >= size - 7) || (r >= size - 7 && c < 7) ||
+                                 ((r + c) % 3 === 0 && r > 6 && c > 6);
+                    if (isDark) {
+                        html += `<rect x="${c * cell}" y="${r * cell}" width="${cell}" height="${cell}" fill="#000" />`;
+                    }
+                }
+            }
+            svg.innerHTML = html;
         }
     </script>
 </body>
