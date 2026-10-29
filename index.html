@@ -4,151 +4,176 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI DANA: МЕКТЕПКЕ ДАЯРЛЫҚ</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --primary: #4f46e5;
-            --secondary: #9333ea;
-            --accent: #eab308;
-            --bg: #0f172a;
-            --text: #f8fafc;
-            --card-bg: #1e293b;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        * {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            box-sizing: border-box;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow-x: hidden; }
-        
-        .screen { display: none; width: 100%; max-width: 950px; height: 580px; background: var(--card-bg); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 25px; flex-direction: column; position: relative; overflow: hidden; border: 1px solid #334155; }
-        .screen.active { display: flex; }
-
-        h1 { color: #818cf8; font-size: 1.8rem; margin-bottom: 10px; text-align: center; }
-        p { margin-bottom: 10px; text-align: center; color: #94a3b8; font-size: 1rem; }
-
-        .btn { background: var(--primary); color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; margin: 5px; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3); }
-        .btn:hover { background: #4338ca; transform: translateY(-2px); }
-        .btn-secondary { background: var(--secondary); }
-        .btn-secondary:hover { background: #7e22ce; }
-        .btn-accent { background: var(--accent); color: #1e293b; }
-        .btn-accent:hover { background: #ca8a04; }
-
-        .menu-buttons { display: flex; flex-direction: column; gap: 10px; width: 300px; margin: 0 auto; }
-        .input-field { padding: 12px; font-size: 1rem; border: 2px solid #475569; background: #0f172a; color: white; border-radius: 8px; width: 300px; margin: 10px auto; text-align: center; outline: none; transition: 0.2s; }
-        .input-field:focus { border-color: var(--primary); }
-
-        .char-select { display: flex; justify-content: center; gap: 15px; margin: 15px 0; }
-        .char-card { border: 2px solid #475569; border-radius: 10px; padding: 10px; cursor: pointer; text-align: center; width: 110px; transition: 0.2s; background: #0f172a; }
-        .char-card.selected { border-color: var(--primary); background: #312e81; transform: scale(1.05); }
-
-        .hud { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; font-weight: bold; font-size: 0.95rem; background: #0f172a; padding: 10px 15px; border-radius: 8px; border: 1px solid #334155; }
-        
-        .boss-container { background: #0f172a; border-radius: 12px; padding: 20px; border: 1px solid #334155; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .boss-header { display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 12px 18px; border-radius: 8px; border-left: 5px solid #ef4444; }
-        .hp-bar-container { width: 200px; background: #334155; height: 16px; border-radius: 8px; overflow: hidden; position: relative; }
-        .hp-bar { width: 100%; height: 100%; background: #ef4444; transition: width 0.3s ease; }
-
-        .scenario-box { background: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #475569; margin: 10px 0; font-size: 1.05rem; line-height: 1.5; }
-        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
-        .option-btn { background: #1e293b; border: 2px solid #475569; color: white; padding: 15px; border-radius: 8px; cursor: pointer; text-align: left; font-weight: 600; transition: 0.2s; font-size: 0.95rem; }
-        .option-btn:hover { background: #334155; border-color: var(--primary); }
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        .screen-container {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 1.5rem;
+        }
+        .screen-container.active {
+            display: flex;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+        }
+        .btn-action {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-action:active {
+            transform: scale(0.95);
+        }
+        .hp-progress {
+            transition: width 0.4s ease-in-out;
+        }
     </style>
 </head>
-<body>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center">
 
-    <!-- БАСТЫ ЭКРАН -->
-    <div id="mainMenu" class="screen active">
-        <h1>AI DANA: МЕКТЕПКЕ ДАЯРЛЫҚ</h1>
-        <p>Болашақ педагогтерге арналған интерактивті білім беру ойыны</p>
-        
-        <input type="text" id="studentName" class="input-field" placeholder="Аты-жөніңізді енгізіңіз..." value="Студент">
-        
-        <div class="char-select">
-            <div class="char-card selected" onclick="selectChar(0, this)">
-                <div style="font-size: 2rem;">👩‍🏫</div>
-                <div style="font-size: 0.8rem; margin-top:5px;">Тәрбиеші</div>
-            </div>
-            <div class="char-card" onclick="selectChar(1, this)">
-                <div style="font-size: 2rem;">🔬</div>
-                <div style="font-size: 0.8rem; margin-top:5px;">Зерттеуші</div>
-            </div>
-            <div class="char-card" onclick="selectChar(2, this)">
-                <div style="font-size: 2rem;">💻</div>
-                <div style="font-size: 0.8rem; margin-top:5px;">Цифрлық педагог</div>
-            </div>
-        </div>
+    <div class="w-full max-w-4xl h-[90vh] relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl flex flex-col">
 
-        <div class="menu-buttons">
-            <button class="btn" onclick="startBossGame()">Ойынды бастау</button>
-            <button class="btn btn-secondary" onclick="showScreen('rulesScreen')">Ойын ережесі</button>
-        </div>
-    </div>
-
-    <!-- ЕРЕЖЕ ЕКРАНЫ -->
-    <div id="rulesScreen" class="screen">
-        <h1>Ойын ережесі</h1>
-        <div style="text-align: left; max-height: 350px; overflow-y: auto; padding-right: 10px; font-size: 1rem; line-height: 1.6;">
-            <p>1. Бұл ойын болашақ педагогтердің жасанды интеллект ұсынған педагогикалық тұжырымдарды сыни тұрғыдан бағалау дағдыларын дамытады.</p>
-            <p>2. Әрбір деңгейде сізге ЖИ жасаған диагностикалық жағдаяттар беріледі.</p>
-            <p>3. Дұрыс шешімді таңдау арқылы Boss-тің өмірін (HP) азайтып, деңгейден өтесіз.</p>
-        </div>
-        <div style="margin-top: 20px; text-align: center;">
-            <button class="btn" onclick="showScreen('mainMenu')">Артқа қайту</button>
-        </div>
-    </div>
-
-    <!-- BOSS BATTLE / ОЙЫН ЕКРАНЫ -->
-    <div id="gameScreen" class="screen">
-        <div class="hud">
-            <span id="hudLives">❤️ 3</span>
-            <span id="hudXp">⚡ 0 XP</span>
-            <span id="hudLevel">1-деңгей: Мектепке даярлық негіздері</span>
-        </div>
-        
-        <div class="boss-container">
-            <div class="boss-header">
-                <div>
-                    <h3 id="bossTitle" style="color: #ef4444; font-size: 1.1rem;">Boss 1: «Біржақты көзқарас»</h3>
-                    <p style="font-size: 0.8rem; margin:0; text-align: left;">Қате тұжырымдарды бейтараптандырыңыз!</p>
+        <!-- 1. МӘЗІР (MAIN MENU) -->
+        <div id="mainMenu" class="screen-container active justify-center items-center text-center p-8">
+            <div class="max-w-md w-full space-y-6">
+                <div class="inline-block p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 mb-2">
+                    <span class="text-3xl">🎓</span>
                 </div>
-                <div>
-                    <span style="font-size: 0.85rem; margin-right: 8px;">Boss HP</span>
-                    <div class="hp-bar-container" style="display: inline-block; vertical-align: middle;">
-                        <div id="hpBar" class="hp-bar" style="width: 100%;"></div>
+                <h1 class="text-3xl font-extrabold tracking-tight text-white">
+                    AI DANA: <span class="text-indigo-400">МЕКТЕПКЕ ДАЯРЛЫҚ</span>
+                </h1>
+                <p class="text-slate-400 text-sm">
+                    Болашақ педагогтерге арналған интерактивті білім беру ойыны
+                </p>
+
+                <div class="space-y-4 pt-4">
+                    <input type="text" id="studentName" placeholder="Аты-жөніңізді енгізіңіз..." 
+                        class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-center focus:outline-none focus:border-indigo-500 text-slate-200">
+                    
+                    <button onclick="startGame()" class="btn-action w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 font-bold rounded-xl shadow-lg shadow-indigo-600/30 text-white">
+                        Ойынды бастау
+                    </button>
+                    
+                    <button onclick="showScreen('rulesScreen')" class="btn-action w-full py-3 bg-slate-800 hover:bg-slate-700 font-semibold rounded-xl border border-slate-700 text-slate-300">
+                        Ойын ережесі
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. ЕРЕЖЕЛЕР (RULES) -->
+        <div id="rulesScreen" class="screen-container p-8 justify-between">
+            <div class="max-w-2xl mx-auto w-full space-y-6 my-auto">
+                <h2 class="text-2xl font-bold text-indigo-400 border-b border-slate-800 pb-3">Ойын ережесі</h2>
+                <div class="space-y-4 text-slate-300 text-sm leading-relaxed">
+                    <p>1. Сіз ЖИ ұсынған педагогикалық тұжырымдар мен диагностикалық қорытындыларды сараптайсыз.</p>
+                    <p>2. Әрбір дұрыс таңдалған шешім Boss-тың HP көрсеткішін азайтады.</p>
+                    <p>3. Қате жауап таңдалған жағдайда өмір саны (❤️) азаяды.</p>
+                </div>
+                <button onclick="showScreen('mainMenu')" class="btn-action w-full py-3 bg-slate-800 hover:bg-slate-700 font-bold rounded-xl border border-slate-700 text-white mt-6">
+                    Артқа қайту
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. ОЙЫН ЕКРАНЫ (GAMEPLAY) -->
+        <div id="gameScreen" class="screen-container">
+            <!-- HUD -->
+            <div class="flex items-center justify-between glass-panel p-4 mb-4">
+                <div class="flex items-center gap-3">
+                    <span id="hudLives" class="text-red-500 text-sm font-bold">❤️❤️❤️</span>
+                    <span id="hudXp" class="text-indigo-400 text-xs font-semibold px-2.5 py-1 bg-indigo-500/10 rounded-full border border-indigo-500/20">⚡ 0 XP</span>
+                </div>
+                <span id="hudLevel" class="text-slate-400 text-xs font-medium">1-деңгей: Мектепке даярлық негіздері</span>
+            </div>
+
+            <!-- BOSS & SCENARIO -->
+            <div class="flex-1 glass-panel p-6 flex flex-col justify-between space-y-4">
+                <!-- Boss Header -->
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-xl">
+                            🦉
+                        </div>
+                        <div>
+                            <h3 id="bossTitle" class="font-bold text-red-400 text-sm">Boss 1: «Біржақты көзқарас»</h3>
+                            <p class="text-xs text-slate-500">Қате тұжырымдарды бейтараптандырыңыз!</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs text-slate-400 font-mono">Boss HP</span>
+                        <div class="w-32 h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                            <div id="hpBar" class="hp-progress h-full bg-red-500" style="width: 100%;"></div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Scenario -->
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80">
+                    <span class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase block mb-1">Жағдаят:</span>
+                    <p id="scenarioText" class="text-sm text-slate-200 leading-relaxed"></p>
+                </div>
+
+                <!-- Options -->
+                <div>
+                    <p class="text-xs text-amber-400 font-semibold mb-2">Осы жағдаят бойынша дұрыс шешімді таңдаңыз:</p>
+                    <div id="optionsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+                </div>
             </div>
 
-            <div class="scenario-box">
-                <p style="color: #38bdf8; font-weight: bold; text-align: left; margin-bottom: 5px;">ЖАҒДАЯТ:</p>
-                <p id="scenarioText" style="text-align: left; color: #f8fafc; margin: 0;"></p>
-            </div>
-
-            <div>
-                <p style="color: #fbbf24; text-weight: bold; text-align: left; margin-bottom: 5px; font-size: 0.9rem;">Осы жағдаят бойынша дұрыс шешімді таңдаңыз:</p>
-                <div class="options-grid" id="optionsGrid"></div>
+            <!-- Footer / Feedback -->
+            <div class="mt-4 flex items-center justify-between">
+                <button onclick="showScreen('mainMenu')" class="text-xs text-slate-500 hover:text-slate-400 font-medium">
+                    Ойынды тоқтату
+                </button>
+                <p id="feedbackText" class="text-xs font-semibold text-right h-4"></p>
             </div>
         </div>
-        
-        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-            <button class="btn btn-secondary" style="padding: 6px 15px; font-size: 0.85rem;" onclick="showScreen('mainMenu')">Шығу</button>
-            <span id="feedbackText" style="font-size: 0.95rem; font-weight: bold; align-self: center;"></span>
-        </div>
-    </div>
 
-    <!-- НӘТИЖЕ ЕКРАНЫ -->
-    <div id="resultScreen" class="screen">
-        <h1>Құттықтаймыз! 🎉</h1>
-        <div id="resultDetails" style="text-align: center; font-size: 1.1rem; line-height: 1.8; margin: 30px 0;"></div>
-        <div style="display: flex; justify-content: center; gap: 15px;">
-            <button class="btn" onclick="startBossGame()">Қайта ойнау</button>
-            <button class="btn btn-secondary" onclick="showScreen('mainMenu')">Басты мәзір</button>
+        <!-- 4. НӘТИЖЕ (RESULT) -->
+        <div id="resultScreen" class="screen-container justify-center items-center text-center p-8">
+            <div class="max-w-md w-full space-y-6">
+                <div class="text-5xl mb-2">🎉</div>
+                <h2 class="text-2xl font-bold text-white">Ойын аяқталды!</h2>
+                <div id="resultDetails" class="glass-panel p-6 text-sm text-slate-300 space-y-2 text-left"></div>
+                <div class="space-y-3">
+                    <button onclick="startGame()" class="btn-action w-full py-3 bg-indigo-600 hover:bg-indigo-500 font-bold rounded-xl text-white">
+                        Қайта ойнау
+                    </button>
+                    <button onclick="showScreen('mainMenu')" class="btn-action w-full py-3 bg-slate-800 hover:bg-slate-700 font-semibold rounded-xl text-slate-300 border border-slate-700">
+                        Басты мәзірге қайту
+                    </button>
+                </div>
+            </div>
         </div>
+
     </div>
 
     <script>
-        let selectedCharacter = 0;
         let gameState = {
             name: "Студент",
             xp: 0,
             lives: 3,
-            level: 1,
             bossHp: 100,
             currentScenarioIndex: 0
         };
@@ -159,7 +184,7 @@
                 text: "ЖИ қорытындысы: «6 жасар Әлібек әріптердің бәрін біледі және санайды. Ол 100% дайын. Басқа диагностика жүргізудің қажеті жоқ».",
                 options: [
                     { text: "Қорытынды бұрыс. Академиялық білімнен өзге эмоционалдық, әлеуметтік және моторикалық даярлық тексерілмеген.", correct: true },
-                    { text: "Қорытынды толығырақ дұрыс. Әріп пен сан білсе мектепке толық дайын.", correct: false }
+                    { text: "Қорытынды толықтай дұрыс. Әріп пен сан білсе мектепке толық дайын.", correct: false }
                 ],
                 exp: "Дұрыс! Мектепке даярлық кешенді түрде бағалануы тиіс."
             },
@@ -183,23 +208,16 @@
             }
         ];
 
-        function selectChar(index, element) {
-            document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
-            element.classList.add('selected');
-            selectedCharacter = index;
+        function showScreen(id) {
+            document.querySelectorAll('.screen-container').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
         }
 
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-        }
-
-        function startBossGame() {
-            const nameInput = document.getElementById('studentName').value.trim();
-            gameState.name = nameInput !== "" ? nameInput : "Студент";
+        function startGame() {
+            const input = document.getElementById('studentName').value.trim();
+            gameState.name = input !== "" ? input : "Студент";
             gameState.xp = 0;
             gameState.lives = 3;
-            gameState.level = 1;
             gameState.bossHp = 100;
             gameState.currentScenarioIndex = 0;
 
@@ -221,61 +239,68 @@
 
             let grid = document.getElementById('optionsGrid');
             grid.innerHTML = '';
-            
-            sc.options.forEach((opt) => {
+
+            sc.options.forEach(opt => {
                 let btn = document.createElement('button');
-                btn.className = 'option-btn';
+                btn.className = 'btn-action p-4 text-left bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs text-slate-300 font-medium leading-relaxed';
                 btn.innerText = opt.text;
                 btn.onclick = () => handleAnswer(opt.correct, sc.exp);
                 grid.appendChild(btn);
             });
+
             updateHUD();
         }
 
         function handleAnswer(isCorrect, explanation) {
             let feedback = document.getElementById('feedbackText');
-            
+
             if (isCorrect) {
-                feedback.style.color = '#38bdf8';
+                feedback.className = 'text-xs font-semibold text-right h-4 text-sky-400';
                 feedback.innerText = explanation;
                 gameState.xp += 50;
-                // Boss HP-ны бір деңгей үшін азайту (мысалы, 3 сұрақ болса, әрқайсысы ~34% азайтады)
+
                 gameState.bossHp -= Math.round(100 / scenarios.length);
                 if (gameState.bossHp < 0) gameState.bossHp = 0;
                 document.getElementById('hpBar').style.width = gameState.bossHp + '%';
-                
+
                 setTimeout(() => {
                     gameState.currentScenarioIndex++;
-                    gameState.level++;
                     loadScenario();
-                }, 2000);
+                }, 1800);
             } else {
-                feedback.style.color = '#ef4444';
-                feedback.innerText = "Қате шешім! ЖИ қателігін байқамадыңыз. Қайта көріңіз.";
+                feedback.className = 'text-xs font-semibold text-right h-4 text-red-400';
+                feedback.innerText = "Қате шешім! ЖИ қателігін байқамадыңыз.";
                 gameState.lives--;
                 updateHUD();
+
                 if (gameState.lives <= 0) {
-                    setTimeout(() => endGame(false), 1500);
+                    setTimeout(() => endGame(false), 1200);
                 }
             }
         }
 
         function updateHUD() {
-            document.getElementById('hudLives').innerText = `❤️ ${gameState.lives}`;
+            let hearts = "❤️".repeat(gameState.lives);
+            document.getElementById('hudLives').innerText = hearts || "💀";
             document.getElementById('hudXp').innerText = `⚡ ${gameState.xp} XP`;
-            document.getElementById('hudLevel').innerText = `${gameState.level}-деңгей: Мектепке даярлық`;
         }
 
         function endGame(success) {
-            let html = success ? `
-                Студент: <b>${gameState.name}</b><br>
-                Барлық Boss-тер жеңілді! Жинақталған XP: <b>${gameState.xp}</b><br><br>
-                <em>Құттықтаймыз! Сіз ЖИ ұсынған контентке кәсіби педагогикалық сараптама жасап шықтыңыз!</em>
-            ` : `
-                Студент: <b>${gameState.name}</b><br>
-                Өміріңіз таусылды. Қайтадан байқап көріңіз!
-            `;
-            document.getElementById('resultDetails').innerHTML = html;
+            let details = document.getElementById('resultDetails');
+            if (success) {
+                details.innerHTML = `
+                    <p><strong class="text-indigo-400">Студент:</strong> ${gameState.name}</p>
+                    <p><strong class="text-indigo-400">Нәтиже:</strong> Барлық Boss жеңілді! 🎉</p>
+                    <p><strong class="text-indigo-400">Ұпай:</strong> ${gameState.xp} XP</p>
+                    <p class="text-xs text-slate-400 pt-2 border-t border-slate-800 mt-2">Сіз ЖИ ұсынған контентке кәсіби педагогикалық сараптама жасап шықтыңыз!</p>
+                `;
+            } else {
+                details.innerHTML = `
+                    <p><strong class="text-red-400">Студент:</strong> ${gameState.name}</p>
+                    <p><strong class="text-red-400">Нәтиже:</strong> Өміріңіз таусылды.</p>
+                    <p class="text-xs text-slate-400 pt-2 border-t border-slate-800 mt-2">Қайтадан байқап көріңіз!</p>
+                `;
+            }
             showScreen('resultScreen');
         }
     </script>
